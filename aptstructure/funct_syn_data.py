@@ -1,20 +1,22 @@
 import numpy as np
 
 import matplotlib.pylab as plt
-from pyiron.project import Project
+#from pyiron.project import Project
 import pandas as pd
 import pandas
 #from pyiron.table.datamining import PyironTable, TableJob
 from random import randint
 from random import seed
 import random
-from numba import jit
+#from numba import jit
 import random
 import pickle 
 #from sklearn.externals import joblib 
-from pyiron.atomistics.structure.atoms import pyiron_to_ase
-from pyiron.atomistics.structure.atoms import ase_to_pyiron
-from dscribe.descriptors import SOAP
+#from pyiron.atomistics.structure.atoms import pyiron_to_ase
+#from pyiron.atomistics.structure.atoms import ase_to_pyiron
+#from dscribe.descriptors import SOAP
+from ase import Atoms
+from ase.build import bulk
 from mpl_toolkits import mplot3d
 import random
 from ase.spacegroup import crystal
@@ -36,7 +38,7 @@ def sustitution_function(basis, ratio_SOL,Type):
         no_of_SOL_atoms_per=int((len(fcc_atom_id)*ratio_SOL)/(1+ratio_SOL))
         SOL_pos_random=random.sample(fcc_atom_id.tolist(), no_of_SOL_atoms_per)        
         basis_altered = basis.copy()
-        basis_altered[SOL_pos_random] = "Mg"
+        basis_altered.symbols[SOL_pos_random] = "Mg"
     else:
         
         No_SOL_atoms_SZ = SOL_percentage(basis, ratio_SOL)
@@ -50,25 +52,25 @@ def sustitution_function(basis, ratio_SOL,Type):
         for pos in SOL_pos_random:
             basis_altered[pos] = 'Al'
         """
-        basis_altered[SOL_pos_random] = "Cu"#"Mg"
+        basis_altered.symbols[SOL_pos_random] = "Cu"#"Mg"
     
     return basis_altered
 
 
 
-def structure(pr, Type,size ):
+def structure( Type,size ):
     
     #from ase.spacegroup import crystal
     if  Type == "bcc":
-        basis = pr.create_ase_bulk('Fe', cubic=True).repeat(size)
+        basis = bulk.create_ase_bulk('Fe', cubic=True).repeat(size)
         
     if Type == "fcc":
-        basis = pr.create_ase_bulk('Al',a= 4.0479, crystalstructure =  "fcc",cubic=True).repeat(size)
+        basis = bulk('Al',a= 4.0479, crystalstructure =  "fcc",cubic=True).repeat(size)
 
     if Type == "l12":
         #print("l12")
-        basis = pr.create_ase_bulk('Al',a= 4.0479, crystalstructure =  "fcc",cubic=True).repeat(1)
-        basis[0] = "Cu" #"Mg"
+        basis = bulk('Al',a= 4.0479, crystalstructure =  "fcc",cubic=True).repeat(1)
+        basis.symbols[0] = "Cu" #"Mg"
         basis = basis.repeat(size)
         #basis.euler_rotate(phi=angles[0,0], theta=angles[1,0], psi=angles[2,0], center="COM")
 
@@ -84,7 +86,7 @@ def structure(pr, Type,size ):
         
     if Type == "mix":
         
-        basis = pr.create_ase_bulk('Al',a= 4.0479, crystalstructure =  "fcc",cubic=True)
+        basis = bulk('Al',a= 4.0479, crystalstructure =  "fcc",cubic=True)
         basis[0] = "Mg"
         basis.set_repeat([20,20,40])
         mid_z = basis.positions[:,-1].max()/2
@@ -175,8 +177,8 @@ def APT_noise_rot(basis, m, sigma_x_y, sigma_z, eff, angles):
 
 
 
-def APT_structure(pr, Type, size, ratio_SOL,  m, sigma_x_y, sigma_z,eff,angles,rot  ):
-    struct =  structure(pr = pr, Type = Type,size = size)
+def APT_structure(Type, size, ratio_SOL,  m, sigma_x_y, sigma_z,eff,angles,rot  ):
+    struct =  structure(Type = Type,size = size)
     
     altered_str = sustitution_function(basis = struct, ratio_SOL = ratio_SOL, Type=Type)
     
